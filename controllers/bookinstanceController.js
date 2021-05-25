@@ -115,23 +115,30 @@ exports.bookinstance_delete_post = function(req, res, next) {
 
 };
 
-exports.bookinstance_update_get = function(req, res) {
+// Display BookInstance update form on GET.
+exports.bookinstance_update_get = function(req, res, next) {
+
     // Get book, authors and genres for form.
     async.parallel({
         bookinstance: function(callback) {
-            BookInstance.findById(req.params.id).populate('book').exec(callback);
+            BookInstance.findById(req.params.id).populate('book').exec(callback)
         },
+        books: function(callback) {
+            Book.find(callback)
+        },
+
         }, function(err, results) {
             if (err) { return next(err); }
             if (results.bookinstance==null) { // No results.
-                var err = new Error('Instance not found');
+                var err = new Error('Book copy not found');
                 err.status = 404;
                 return next(err);
             }
             // Success.
-            res.render('bookinstance_form', { title: 'Update Instance', bookinstance: results.bookinstance });
-        });};
+            res.render('bookinstance_form', { title: 'Update  BookInstance', book_list : results.books, selected_book : results.bookinstance.book._id, bookinstance:results.bookinstance });
+        });
 
+};
 // Handle bookinstance update on POST.
 
 exports.bookinstance_update_post = [
