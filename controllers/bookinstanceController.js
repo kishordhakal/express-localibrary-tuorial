@@ -91,11 +91,9 @@ exports.bookinstance_create_post = [
 ];
 // Display BookInstance delete form on GET.
 exports.bookinstance_delete_get = function(req, res) {
-    async.parallel({
-        bookinstance: function(callback) {
-            BookInstance.findById(req.params.id).exec(callback)
-        },
-    }, function(err, results) {
+   BookInstance.findById(req.params.id)
+    .populate('book')
+	.exec(function (err,bookinstance){
         if (err) { return next(err); }
         if (results.bookinstance==null) { // No results.
             res.redirect('/catalog/bookinstances');
@@ -106,22 +104,15 @@ exports.bookinstance_delete_get = function(req, res) {
 };
 
 // Handle BookInstance delete on POST.
-exports.bookinstance_delete_post = function(req, res) {
-    async.parallel({
-        bookinstance: function(callback) {
-          BookInstance.findById(req.body.bookinstanceid).exec(callback)
-        },
-    }, function(err, results) {
+exports.bookinstance_delete_post = function(req, res, next) {
+    
+    // Assume valid BookInstance id in field.
+    BookInstance.findByIdAndRemove(req.body.id, function deleteBookInstance(err) {
         if (err) { return next(err); }
-       
-        // Author has no books. Delete object and redirect to the list of authors.
-        BookInstance.findByIdAndRemove(req.body.bookinstanceid, function deleteInstance(err) {
-            if (err) { return next(err); }
-            // Success - go to author list
-            res.redirect('/catalog/bookinstances')
-        })
-        
-    });
+        // Success, so redirect to list of BookInstance items.
+        res.redirect('/catalog/bookinstances');
+        });
+
 };
 
 exports.bookinstance_update_get = function(req, res) {
@@ -142,7 +133,7 @@ exports.bookinstance_update_get = function(req, res) {
         });};
 
 // Handle bookinstance update on POST.
-// Handle book update on POST.
+
 exports.bookinstance_update_post = [
 
     // Validate and sanitise fields.
